@@ -1,8 +1,11 @@
 # model_cfg
-num_things_classes = 100
-num_stuff_classes = 50
+# num_things_classes = 100
+# num_stuff_classes = 50
+num_things_classes = 6
+num_stuff_classes = 1
 num_classes = num_things_classes + num_stuff_classes
-norm_cfg = dict(type='SyncBN', requires_grad=True)
+norm_cfg = dict(type='BN', requires_grad=True)
+# norm_cfg = dict(type='SyncBN', requires_grad=True)
 model = dict(
     type='EncoderDecoderMask2Former',
     pretrained=None,

@@ -1,3 +1,10 @@
+# 非上传文件：
+segmentation/data/
+segmentation/ops
+segmentation/pretrained/
+segmentation/released/
+segmentation/work_dirs/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
