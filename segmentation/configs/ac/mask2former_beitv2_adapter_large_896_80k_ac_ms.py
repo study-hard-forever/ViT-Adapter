@@ -111,7 +111,7 @@ img_norm_cfg = dict(
     mean=[163.00198485, 182.0198568, 158.71672005000002], std=[45.9286161, 46.03267905, 45.45299265], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
-    dict(type='LoadAnnotations', reduce_zero_label=True),
+    dict(type='LoadAnnotations', reduce_zero_label=False),  # 此处改为False
     dict(type='Resize', img_scale=(3584, 896), ratio_range=(0.5, 2.0)),
     dict(type='RandomCrop', crop_size=crop_size, cat_max_ratio=0.75),
     dict(type='RandomFlip', prob=0.5),
@@ -154,6 +154,9 @@ data = dict(samples_per_gpu=1,
             val=dict(pipeline=test_pipeline),
             test=dict(pipeline=test_pipeline))
 runner = dict(type='IterBasedRunner')
-checkpoint_config = dict(by_epoch=False, interval=1000, max_keep_ckpts=1)
+checkpoint_config = dict(by_epoch=False, interval=1000, max_keep_ckpts=5)  # 这里将之前的1改为-1表示每一次权重都保存而不是仅仅保存指定数量的权重
+# 参考链接：https://mmengine.readthedocs.io/zh-cn/latest/api/generated/mmengine.hooks.CheckpointHook.html#checkpointhook
+# https://mmengine.readthedocs.io/zh-cn/latest/tutorials/hook.html#checkpointhook
+# 改为5（一个权重8个G，有点太大了，只能保存有限数量的）
 evaluation = dict(interval=8000, metric='mIoU', save_best='mIoU')
 

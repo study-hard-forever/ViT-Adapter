@@ -5,6 +5,9 @@ segmentation/pretrained/
 segmentation/released/
 segmentation/work_dirs/
 
+segmentation/work_dirs_old/
+segmentation/results/
+segmentation/results_iter_80000/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
