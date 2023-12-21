@@ -201,6 +201,7 @@ def main():
         
         综上所述：mask2former_beitv2_adapter_large_896_80k_ac_ms.py模型优于deeplabv3+模型，但速度上慢了大约30倍，完全失去了实时性（15s/img，即4imgs/min，即240imgs/h）
         但mask2former_beitv2_adapter_large_896_80k_ac_ms.py模型可用于非实时推理以取得更佳效果
+        mask2former_beitv2_adapter_large_896_80k_ac_ms.py是896*896大小的输入图像，而deeplabv3+采用的是512*512大小的输入图像，由于原图像尺寸较大且不便裁剪因此较大的输入更有利（图像损失会减小很多）
         
         deeplabv3+混淆矩阵：
         +--------------+-------------+--------+--------+--------+-----------+-----------+---------+
