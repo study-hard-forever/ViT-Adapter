@@ -8,6 +8,9 @@ segmentation/work_dirs/
 segmentation/work_dirs_old/
 segmentation/results/
 segmentation/results_iter_80000/
+segmentation/results_iter_72000_test_jpg/
+segmentation/results_iter_72000_test/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

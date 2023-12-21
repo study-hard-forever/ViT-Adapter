@@ -67,6 +67,7 @@ def main():
     
     # 遍历文件夹
     test_jpg_path = r'data/VOCdevkit/VOC2007/test_jpg'
+    test_jpg_path = r'data/test'
     import os
     import numpy as np
     import time
@@ -135,12 +136,12 @@ def main():
         # cv2.imwrite(out_path, img)
         # print(f"Result is save at {out_path}")
         
-        '''
-        此处将原图与融合后的图像、结果图共三张图水平堆叠在一起（适用于没有mask的test图像）
+        '''注：一与二选其一
+        一、此处将原图与融合后的图像、结果图共三张图水平堆叠在一起（适用于没有mask的test图像）
         顺序如下：
         原图  结果图与原图融合后的图像 结果图
         '''
-        """
+        """"""
         # 转换为 NumPy 数组
         np_image = np.array(image)  # 原图
         np_r_image = np.array(img)  # 结果图与原图融合后的图像 结果图
@@ -150,16 +151,16 @@ def main():
         # 保存图像为文件（例如JPEG格式）
         cv2.imwrite(out_path, stacked_image)
         print(f"Result is save at {out_path}")
-        """
         
         
-        '''
-        此处将原图/标签与结果图与原图融合后的图像/结果图堆叠在一起（适用于有mask的val/test图像）
+        
+        '''注：一与二选其一
+        二、此处将原图/标签与结果图与原图融合后的图像/结果图堆叠在一起（适用于有mask的val/test图像）
         顺序如下：
         原图  结果图与原图融合后的图像
         标签  结果图
         '''
-        """
+        
         """
         # 转换为 NumPy 数组
         np_image = np.array(image)  # 原图
@@ -242,7 +243,7 @@ def main():
             print(f"Result is save at {out_path}")
         else:
             print("两张图像的形状不匹配，无法水平堆叠。")
-        
+        """
     
 if __name__ == '__main__':
     main()
