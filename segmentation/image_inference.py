@@ -167,6 +167,10 @@ def main():
         colors = [(0, 0, 0), (128, 0, 0), (0, 128, 0), (128, 128, 0), (0, 0, 128), (128, 0, 128), (0, 128, 128)]  # 每一类别的标签（这里保证mask与预测图颜色一致）
         '''
         ["_background_","BD_beng","lou_guang","jiao_beng","you_mo_yin","hua_shang","yi_mo"]  # AC
+        
+        mask2former_beitv2_adapter_large_896_80k_ac_ms.py模型：
+        [>>>>>>>>>>>>>>>>>>>>>>>>>>>>] 511/511, 0.1 task/s, elapsed: 7313s, ETA:     0s2023-12-20 18:35:04,528 - mmseg - INFO - per class results:
+        2023-12-20 18:35:04,529 - mmseg - INFO - 
         +--------------+-------+-------+
         |    Class     |  IoU  |  Acc  |
         +--------------+-------+-------+
@@ -183,6 +187,34 @@ def main():
         +-------+-------+-------+
         | 99.86 | 79.62 | 92.57 |
         +-------+-------+-------+
+        
+        deeplabv3+模型：
+        510 / 511: mIou-72.35%; mPA-85.24%; Accuracy-99.83%
+        ===>_background_:       Iou-99.83; Recall (equal to the PA)-99.91; Precision-99.91
+        ===>BD_beng:    Iou-59.49; Recall (equal to the PA)-73.74; Precision-75.47
+        ===>lou_guang:  Iou-67.1; Recall (equal to the PA)-84.14; Precision-76.81
+        ===>jiao_beng:  Iou-79.98; Recall (equal to the PA)-93.96; Precision-84.31
+        ===>you_mo_yin: Iou-76.54; Recall (equal to the PA)-88.63; Precision-84.87
+        ===>hua_shang:  Iou-46.84; Recall (equal to the PA)-71.38; Precision-57.67
+        ===>yi_mo:      Iou-76.71; Recall (equal to the PA)-84.92; Precision-88.81
+        ===> mIoU: 72.35; mPA: 85.24; Accuracy: 99.83
+        
+        综上所述：mask2former_beitv2_adapter_large_896_80k_ac_ms.py模型优于deeplabv3+模型，但速度上慢了大约30倍，完全失去了实时性（15s/img，即4imgs/min，即240imgs/h）
+        但mask2former_beitv2_adapter_large_896_80k_ac_ms.py模型可用于非实时推理以取得更佳效果
+        
+        deeplabv3+混淆矩阵：
+        +--------------+-------------+--------+--------+--------+-----------+-----------+---------+
+        |              | _background_ | BD_beng|lou_guang|jiao_beng|you_mo_yin |hua_shang  | yi_mo|
+        +--------------+-------------+--------+--------+--------+-----------+-----------+---------+
+        | _background_ | 1378549533  | 138229 | 88825  | 98813  | 215873    | 177794    | 482243  |
+        | BD_beng      | 169642      | 513994 | 8457   | 72     | 621       | 23        | 4235    |
+        | lou_guang    | 58033       | 390    | 322410 | 0      | 0         | 208       | 2156    |
+        | jiao_beng    | 31810       | 2225   | 42     | 531570 | 0         | 0         | 69      |
+        | you_mo_yin   | 154625      | 0      | 0      | 0      | 1214412   | 464       | 668     |
+        | hua_shang    | 97537       | 0      | 0      | 0      | 0         | 243215    | 0       |
+        | yi_mo        | 663512      | 26185  | 0      | 52     | 0         | 0         | 3884233 |
+        +--------------+-------------+--------+--------+--------+-----------+-----------+---------+
+
         '''
         # 注意此处需要外部给出mask_path的地址
         mask_path = r'data/VOCdevkit/VOC2007/test_mask'
