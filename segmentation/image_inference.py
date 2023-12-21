@@ -16,9 +16,9 @@ import os.path as osp
 命令：
 CUDA_VISIBLE_DEVICES=0 python image_inference.py \
   configs/ac/mask2former_beitv2_adapter_large_896_80k_ac_ms.py  \
-  work_dirs/mask2former_beitv2_adapter_large_896_80k_ac_ms/iter_80000.pth  \
+  work_dirs/mask2former_beitv2_adapter_large_896_80k_ac_ms/best_mIoU_iter_72000.pth  \
   data/VOCdevkit/VOC2007/test_jpg/1_bengbianA_2_bengbianA_srcTray_1_srcIndex_1_DL_result_0_0_3_BengBian.jpg \
-  --palette AcDataset 
+  --palette ac 
 '''
 def main():
     parser = ArgumentParser()
@@ -49,6 +49,7 @@ def main():
         model.CLASSES = get_classes(args.palette)
     
     '''
+    args.out = "demo"  # 单张测试图的时候就放在demo文件夹即可
     # test a single image
     result = inference_segmentor(model, args.img)
     # show the results
@@ -61,26 +62,154 @@ def main():
     out_path = osp.join(args.out, osp.basename(args.img))
     cv2.imwrite(out_path, img)
     print(f"Result is save at {out_path}")
-    '''
+    '''        
+        
     
     # 遍历文件夹
     test_jpg_path = r'data/VOCdevkit/VOC2007/test_jpg'
     import os
+    import numpy as np
+    import time
+    from tqdm import tqdm
     imgs = os.listdir(test_jpg_path)
-    for img_path in imgs:
+    for img_path in tqdm(imgs):
         img_path = os.path.join(test_jpg_path,img_path)
-        result = inference_segmentor(model, img_path)
-        # print(result)
+        image = cv2.imread(img_path)  # 此处既然已经读取了原图，后续inference_segmentor传入仅需将读取后的图像传给模型即可
+        
+        start = time.time()
+        result = inference_segmentor(model, image)
+        end = time.time()
+        print(f'推理时间： {end-start}秒')  # 以秒为单位  此处由于模型以及数据文件均较大，推理时间由14~18秒不等（后续稳定在14~15秒左右），显存占用： 9154MiB / 32768MiB
+        '''
+        5%|████▌                                                                                         | 20/410 [05:30<1:40:35, 15.48s/it]推理时间： 14.2584068775177秒
+        Result is save at results_iter_80000/0607-1216_OK_srcTray_3_srcIndex_29_ACSYM_acqName_1_5c_2_Barcode_7cd304644e4947f5_0_0_test.jpg
+        5%|████▊                                                                                         | 21/410 [05:45<1:40:09, 15.45s/it]推理时间： 14.250216960906982秒
+        Result is save at results_iter_80000/15_huahenA-1_huahenA_srcTray_1_srcIndex_15_DL_result_0_0_1_HuaShang.jpg
+        5%|█████                                                                                         | 22/410 [06:01<1:39:50, 15.44s/it]推理时间： 14.227401733398438秒
+        Result is save at results_iter_80000/0222-1344_NG_srcTray_1_srcIndex_18_ACSYM_acqName_1_5c_2_0206_1_0_test_1_LouGuang.jpg
+        6%|█████▎                                                                                        | 23/410 [06:16<1:39:35, 15.44s/it]推理时间： 14.248859405517578秒
+        Result is save at results_iter_80000/0607-1216_OK_srcTray_1_srcIndex_50_ACSYM_acqName_1_5c_2_Barcode_7cd307644e4b672b_1_0_test.jpg
+        ......
+        10%|█████████▍                                                                                    | 41/410 [10:53<1:34:27, 15.36s/it]推理时间： 14.165016651153564秒
+        Result is save at results_iter_80000/0523-0923_NG_srcTray_2_srcIndex_52_ACSYM_acqName_0_5c_2_Barcode_7cd31564546606fd_1_1_test_YiMo.jpg
+        10%|█████████▋                                                                                    | 42/410 [11:08<1:34:00, 15.33s/it]推理时间： 14.204516649246216秒
+        Result is save at results_iter_80000/0605-2053_OK_srcTray_14_srcIndex_32_ACSYM_acqName_0_5c_2_Barcode_7cd3046450959765_202_202_0_1_test.jpg
+        10%|█████████▊                                                                                    | 43/410 [11:23<1:33:43, 15.32s/it]推理时间： 14.195263624191284秒
+        Result is save at results_iter_80000/0605-2053_OK_srcTray_11_srcIndex_39_ACSYM_acqName_0_5c_2_Barcode_7cd30464509e692c_77_77_1_1_test.jpg
+        '''
+        
+        '''仅保存mask图像
+        print(f'image类型：{type(image)}, result类型：{type(result[0])}')  # 返回的结果是list类型的，每个对象为numpy.ndarray图像的mask结果
+        print(f'image形状：{image.shape}, result形状：{result[0].shape}')
+        print(np.unique(result[0]))  # 统计像素值
+        mmcv.mkdir_or_exist(args.out)
+        out_path = osp.join(args.out, osp.basename(img_path))
+        cv2.imwrite(out_path, result[0])
+        print(f"Result is save at {out_path}")
+        continue  # 仅保存mask结果图后续的内容不要了
+        '''
         # show the results
         if hasattr(model, 'module'):
             model = model.module
-        img = model.show_result(img_path, result,
+            
+        # 获得结果图与原图融合后的图像
+        img = model.show_result(image, result,
                                 palette=get_palette(args.palette),
                                 show=False, opacity=args.opacity)
+        
+        # # 获得推理的mask图像
+        # img_zero = np.zeros(image.shape)
+        # pre_mask = model.show_result(img_zero, result,
+        #                         palette=get_palette(args.palette),
+        #                         show=False, opacity=args.opacity)
+        
+        # 直接对获得推理的mask图像进行染色得到可视化的预测结果（预测的mask为result[0]）（单张图像依次推理的情况下）
+        colors = [(0, 0, 0), (128, 0, 0), (0, 128, 0), (128, 128, 0), (0, 0, 128), (128, 0, 128), (0, 128, 128)]  # 每一类别的标签（这里保证mask与预测图颜色一致）
+        orininal_h  = image.shape[0]
+        orininal_w  = image.shape[1]
+        pre_mask = np.reshape(np.array(colors, np.uint8)[np.reshape(result[0], [-1])], [orininal_h, orininal_w, -1])
+        pre_mask = pre_mask[:, :, [2, 1, 0]]
+        
         mmcv.mkdir_or_exist(args.out)
         out_path = osp.join(args.out, osp.basename(img_path))
-        cv2.imwrite(out_path, img)
-        print(f"Result is save at {out_path}")
+        # cv2.imwrite(out_path, img)
+        # print(f"Result is save at {out_path}")
+        
+        '''
+        此处将原图与融合后的图像、结果图共三张图水平堆叠在一起（适用于没有mask的test图像）
+        顺序如下：
+        原图  结果图与原图融合后的图像 结果图
+        '''
+        """
+        # 转换为 NumPy 数组
+        np_image = np.array(image)  # 原图
+        np_r_image = np.array(img)  # 结果图与原图融合后的图像 结果图
+        
+        stacked_image = np.hstack((np_image, np_r_image, pre_mask))
 
+        # 保存图像为文件（例如JPEG格式）
+        cv2.imwrite(out_path, stacked_image)
+        print(f"Result is save at {out_path}")
+        """
+        
+        
+        '''
+        此处将原图/标签与结果图与原图融合后的图像/结果图堆叠在一起（适用于有mask的val/test图像）
+        顺序如下：
+        原图  结果图与原图融合后的图像
+        标签  结果图
+        '''
+        """
+        """
+        # 转换为 NumPy 数组
+        np_image = np.array(image)  # 原图
+        
+        colors = [(0, 0, 0), (128, 0, 0), (0, 128, 0), (128, 128, 0), (0, 0, 128), (128, 0, 128), (0, 128, 128)]  # 每一类别的标签（这里保证mask与预测图颜色一致）
+        '''
+        ["_background_","BD_beng","lou_guang","jiao_beng","you_mo_yin","hua_shang","yi_mo"]  # AC
+        +--------------+-------+-------+
+        |    Class     |  IoU  |  Acc  |
+        +--------------+-------+-------+
+        | _background_ | 99.86 | 99.91 |
+        |   BD_beng    | 65.78 | 90.11 |
+        |  lou_guang   | 77.76 | 90.65 |
+        |  jiao_beng   | 84.96 | 94.35 |
+        |  you_mo_yin  |  84.1 | 93.07 |
+        |  hua_shang   | 58.19 |  85.3 |
+        |    yi_mo     | 86.67 | 94.63 |
+        +--------------+-------+-------+
+        +-------+-------+-------+
+        |  aAcc |  mIoU |  mAcc |
+        +-------+-------+-------+
+        | 99.86 | 79.62 | 92.57 |
+        +-------+-------+-------+
+        '''
+        # 注意此处需要外部给出mask_path的地址
+        mask_path = r'data/VOCdevkit/VOC2007/test_mask'
+        mask = os.path.join(mask_path, os.path.splitext(os.path.basename(img_path))[0]+'.png')
+        mask       = cv2.imread(mask, cv2.IMREAD_GRAYSCALE)  # 这里由于部分数据仍然是三通道的因此需要转为灰度图单通道的
+        # （此处三个通道上数据是一致的，在训练时并没有产生额外的影响）
+        orininal_h  = mask.shape[0]
+        orininal_w  = mask.shape[1]
+        mask = np.reshape(np.array(colors, np.uint8)[np.reshape(mask, [-1])], [orininal_h, orininal_w, -1])
+        
+        mask = mask[:, :, [2, 1, 0]]  # 重要，colors的定义时RGB格式的，此处是按照cv2读取的，读取的顺序是BGR格式，因此要进行transpose
+        
+        # 将原图像与mask图像竖着堆叠在一起
+        stacked_image_orininal = np.vstack((np_image, mask))
+        # 将原图像与结果图的混合图像与预测的结果图像竖着堆叠在一起
+        np_r_image = np.vstack((img, pre_mask))
+        
+        # 检查两张图像的形状是否相同
+        if stacked_image_orininal.shape[:2] == np_r_image.shape[:2]:
+            # 将两张图像水平堆叠在一起
+            stacked_image = np.hstack((stacked_image_orininal, np_r_image))
+            # 保存图像为文件（例如JPEG格式）
+            cv2.imwrite(out_path, stacked_image)
+            print(f"Result is save at {out_path}")
+        else:
+            print("两张图像的形状不匹配，无法水平堆叠。")
+        
+    
 if __name__ == '__main__':
     main()
