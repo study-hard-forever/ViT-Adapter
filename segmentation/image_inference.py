@@ -18,7 +18,8 @@ CUDA_VISIBLE_DEVICES=0 python image_inference.py \
   configs/ac/mask2former_beitv2_adapter_large_896_80k_ac_ms.py  \
   work_dirs/mask2former_beitv2_adapter_large_896_80k_ac_ms/best_mIoU_iter_72000.pth  \
   data/VOCdevkit/VOC2007/test_jpg/1_bengbianA_2_bengbianA_srcTray_1_srcIndex_1_DL_result_0_0_3_BengBian.jpg \
-  --palette ac 
+  --palette ac  \
+  --out /home/sylu/workspace/mjg/nelson/data/ViT-Adapter_test_230713_Boston_AC_Test_NG
 '''
 def main():
     parser = ArgumentParser()
@@ -66,8 +67,9 @@ def main():
         
     
     # 遍历文件夹
-    test_jpg_path = r'data/VOCdevkit/VOC2007/test_jpg'
-    test_jpg_path = r'data/test'
+    # test_jpg_path = r'data/VOCdevkit/VOC2007/test_jpg'
+    # test_jpg_path = r'data/test'
+    test_jpg_path = r'/home/sylu/workspace/mjg/nelson/data/NG_Cropped'
     import os
     import numpy as np
     import time
@@ -99,6 +101,44 @@ def main():
         Result is save at results_iter_80000/0605-2053_OK_srcTray_11_srcIndex_39_ACSYM_acqName_0_5c_2_Barcode_7cd30464509e692c_77_77_1_1_test.jpg
         '''
         
+        '''
+        补充——deeplabv3+速度：
+        单卡推理速度如下：
+        1%|█                                     | 1/122 [00:09<18:14,  9.04s/it]推理时间： 0.5354411602020264秒
+        2%|███▎                                 | 2/122 [00:09<08:20,  4.17s/it]推理时间： 0.49387049674987793秒
+        2%|████▉                                | 3/122 [00:10<05:06,  2.57s/it]推理时间： 0.5091474056243896秒
+        3%|██████▌                               | 4/122 [00:11<03:39,  1.86s/it]推理时间： 0.470505952835083秒
+        4%|████████▏                            | 5/122 [00:11<02:47,  1.43s/it]推理时间： 0.47536134719848633秒
+        5%|█████████▊                           | 6/122 [00:12<02:15,  1.17s/it]推理时间： 0.46993589401245117秒
+        6%|███████████▍                         | 7/122 [00:13<01:57,  1.02s/it]推理时间： 0.47842836380004883秒
+        7%|█████████████                         | 8/122 [00:14<01:45,  1.08it/s]推理时间： 0.49158215522766113秒
+        7%|██████████████▊                      | 9/122 [00:14<01:37,  1.16it/s]推理时间： 0.4747023582458496秒
+        8%|████████████████▎                    | 10/122 [00:15<01:29,  1.26it/s]推理时间： 0.48772644996643066秒
+        
+        注：上述包含读取图像，图像与结果图融合等多个数据处理的时间，网络实际推理时间为：0.10~0.12秒左右
+        <class 'numpy.ndarray'> <class 'numpy.ndarray'> <class 'numpy.ndarray'>
+        (3318, 1770, 3) (3318, 1770, 3) (3318, 3540, 3)
+        17%|████████████████████████▏                 | 319/1922 [04:43<25:21,  1.05it/s]推理时间： 0.10497164726257324秒
+        <class 'numpy.ndarray'> <class 'numpy.ndarray'> <class 'numpy.ndarray'>
+        (3318, 1771, 3) (3318, 1771, 3) (3318, 3542, 3)
+        17%|████████████████████████▎                 | 320/1922 [04:43<24:59,  1.07it/s]推理时间： 0.10782861709594727秒
+        <class 'numpy.ndarray'> <class 'numpy.ndarray'> <class 'numpy.ndarray'>
+        (3318, 1771, 3) (3318, 1771, 3) (3318, 3542, 3)
+        17%|████████████████████████▍                 | 321/1922 [04:44<24:59,  1.07it/s]推理时间： 0.11038613319396973秒
+        <class 'numpy.ndarray'> <class 'numpy.ndarray'> <class 'numpy.ndarray'>
+        (3334, 1780, 3) (3334, 1780, 3) (3334, 3560, 3)
+        17%|████████████████████████▍                 | 322/1922 [04:45<25:06,  1.06it/s]推理时间： 0.10666728019714355秒
+        <class 'numpy.ndarray'> <class 'numpy.ndarray'> <class 'numpy.ndarray'>
+        (3336, 1780, 3) (3336, 1780, 3) (3336, 3560, 3)
+        17%|████████████████████████▌                  | 323/1922 [04:46<24:53,  1.07it/s]推理时间： 0.1121978759765625秒
+        <class 'numpy.ndarray'> <class 'numpy.ndarray'> <class 'numpy.ndarray'>
+        (3330, 1777, 3) (3330, 1777, 3) (3330, 3554, 3)
+        17%|████████████████████████▌                  | 324/1922 [04:47<24:42,  1.08it/s]推理时间： 0.11419177055358887秒
+        <class 'numpy.ndarray'> <class 'numpy.ndarray'> <class 'numpy.ndarray'>
+        (3330, 1777, 3) (3330, 1777, 3) (3330, 3554, 3)
+        17%|████████████████████████▋                 | 325/1922 [04:48<25:02,  1.06it/s]推理时间： 0.10715985298156738秒
+        '''
+                
         '''仅保存mask图像
         print(f'image类型：{type(image)}, result类型：{type(result[0])}')  # 返回的结果是list类型的，每个对象为numpy.ndarray图像的mask结果
         print(f'image形状：{image.shape}, result形状：{result[0].shape}')
@@ -141,7 +181,7 @@ def main():
         顺序如下：
         原图  结果图与原图融合后的图像 结果图
         '''
-        """"""
+        """
         # 转换为 NumPy 数组
         np_image = np.array(image)  # 原图
         np_r_image = np.array(img)  # 结果图与原图融合后的图像 结果图
@@ -151,7 +191,29 @@ def main():
         # 保存图像为文件（例如JPEG格式）
         cv2.imwrite(out_path, stacked_image)
         print(f"Result is save at {out_path}")
+        """
         
+        '''
+        此处增加该段代码是为了做模型对比，堆叠顺序为:结果图与原图融合后的图像 结果图（纵向堆叠）
+        '''
+        # 首先对返回内容进行了修改，加了判断条件以判断结果中是否存在NG缺陷
+        pixel = np.unique(result[0])  # 统计预测结果的像素值
+        NG = False  # 判断是否存在缺陷
+        if pixel.any():  # any函数，任意一个元素不为0，输出为True（有缺陷）
+            NG = True
+        if NG:
+            save_path = osp.join(args.out, 'NG', osp.basename(img_path))
+        else:
+            save_path = osp.join(args.out, 'OK', osp.basename(img_path))
+                    
+        # 转换为 NumPy 数组
+        np_r_image = np.array(img)  # 结果图与原图融合后的图像
+        
+        stacked_image = np.vstack((np_r_image, pre_mask))
+
+        # 保存图像为文件（例如JPEG格式）
+        cv2.imwrite(save_path, stacked_image)
+        print(f"Result is save at {save_path}")
         
         
         '''注：一与二选其一
